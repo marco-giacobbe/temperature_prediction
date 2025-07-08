@@ -1,6 +1,5 @@
 import torch
 import sys
-
 from src.layers import KANLinear
 
 class KAN(torch.nn.Module):
