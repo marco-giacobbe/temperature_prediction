@@ -1,7 +1,7 @@
 import torch
 import sys
 
-from layers import KANLinear
+from src.layers import KANLinear
 
 class KAN(torch.nn.Module):
     def __init__(self, layers_hidden):

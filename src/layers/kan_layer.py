@@ -155,6 +155,7 @@ class KANLinear(torch.nn.Module):
         # da commentare per la conversione onnx
         #assert x.size(-1) == self.in_features
         original_shape = x.shape
+        x = x.contiguous()
         x = x.view(-1, self.in_features)
 
         base_output = F.linear(self.base_activation(x), self.base_weight)

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import math
 
-from layers import KANLinear
+from src.layers import KANLinear
 
 
 class PositionalEncoding(nn.Module):
@@ -102,7 +102,7 @@ class Transformer(nn.Module):
         self.out_w = out_w
         self.pos_encoder = PositionalEncoding(d_model, max_len=300)
         self.encoder = nn.ModuleList([EncoderLayer(d_model, nhead, ff, dropout, kan) for _ in range(nlayer)])
-        self.decoder = KANLinear([d_model, 1]) if kan else nn.Linear(d_model, 1)
+        self.decoder = KANLinear(d_model, 1) if kan else nn.Linear(d_model, 1)
 
 
     def generate_mask(self, sz):
