@@ -1,1 +1,1 @@
-from . import KAN
+from .kan import KAN
