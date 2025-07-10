@@ -1,4 +1,5 @@
 import torch
+
 import src.data_utils as data_utils
 from matplotlib import pyplot
 import math
@@ -50,7 +51,7 @@ def eval(model, criterion, dataset, out_w, plot):
             out = model(src)
             out, tgt = out[-out_w:], tgt[-out_w:]
             total_loss += criterion(out, tgt).item()
-            out, tgt = torch.round(out*50), tgt*50
+            #out, tgt = torch.round(out*40+2), tgt*40+2
             if not i%out_w:
                 test_result = torch.cat((test_result, out.view(-1).cpu()), 0)
                 truth = torch.cat((truth, tgt.view(-1).cpu()), 0)
@@ -79,7 +80,7 @@ def eval(model, criterion, dataset, out_w, plot):
         pyplot.show()
         pyplot.close()
 
-    return mean_loss
+    return mean_loss, (truth, test_result)
 
 def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
     train_dataset, eval_dataset = datasets
@@ -89,7 +90,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
     epoch = 0
     while True:
         print("epoch: {} | ".format(epoch))
-        current_loss = eval(model, criterion, eval_dataset, out_w, False)
+        current_loss = eval(model, criterion, eval_dataset, out_w, False)[0]
         eval_losses.append(current_loss)
         epoch += 1
         if current_loss < loss_min:
@@ -100,7 +101,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
             counter += 1
         if counter == patience:
             model = load_checkpoint(model, "./tmp/model_ckpnt.pth")
-            current_loss = eval(model, criterion, eval_dataset, out_w, True)
+            current_loss = eval(model, criterion, eval_dataset, out_w, True)[0]
             return (train_losses[:-patience], eval_losses[1:-patience]) 
         train_losses.append(train1epoch(model, optim, criterion, train_dataset, bsz, out_w))
         scheduler.step()
