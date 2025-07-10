@@ -41,7 +41,7 @@ def train1epoch(model, optim, criterion, dataset, bsz, out_w):
         optim.zero_grad()
     return total_loss/dataset.shape[0]
 
-def eval(model, criterion, dataset, out_w, plot):
+def eval(model, criterion, dataset, out_w, plot, verbose=True):
     model.eval()
     total_loss = 0.
     test_result, truth = torch.Tensor(0), torch.Tensor(0)
@@ -61,7 +61,8 @@ def eval(model, criterion, dataset, out_w, plot):
     mean_loss = total_loss/dataset.shape[0]
     mean_err = torch.mean(abserr).item()
     var_err = torch.var(abserr).item()
-    print("validation loss: {:.5f} | errore medio: {:.2f} | varianza: {:.2f} | deviazione standard: {:.2f}".format(mean_loss, mean_err, var_err, math.sqrt(var_err)))
+    if verbose:
+        print("validation loss: {:.5f} | errore medio: {:.2f} | varianza: {:.2f} | deviazione standard: {:.2f}".format(mean_loss, mean_err, var_err, math.sqrt(var_err)))
     if plot:
         fig, (ax1, ax2) = pyplot.subplots(nrows=2, ncols=1, sharex=True)
         ax1.plot(test_result,color="#009E73")
@@ -83,15 +84,16 @@ def eval(model, criterion, dataset, out_w, plot):
 
     return mean_loss, (truth, test_result)
 
-def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
+def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, verbose):
     train_dataset, eval_dataset = datasets
     train_losses, eval_losses = [], []
     loss_min = math.inf
     counter = 0
     epoch = 0
     while True:
-        print("epoch: {} | ".format(epoch))
-        current_loss = eval(model, criterion, eval_dataset, out_w, False)[0]
+        if verbose:
+            print("epoch: {} | ".format(epoch))
+        current_loss = eval(model, criterion, eval_dataset, out_w, False, verbose=verbose)[0]
         eval_losses.append(current_loss)
         epoch += 1
         if current_loss < loss_min:
@@ -102,7 +104,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
             counter += 1
         if counter == patience:
             model = load_checkpoint(model, "./tmp/model_ckpnt.pth")
-            current_loss = eval(model, criterion, eval_dataset, out_w, True)[0]
+            current_loss = eval(model, criterion, eval_dataset, out_w, True, verbose)[0]
             return (train_losses[:-patience], eval_losses[1:-patience]) 
         train_losses.append(train1epoch(model, optim, criterion, train_dataset, bsz, out_w))
         scheduler.step()
