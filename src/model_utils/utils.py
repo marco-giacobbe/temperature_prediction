@@ -65,8 +65,8 @@ def eval(model, criterion, dataset, out_w, plot, verbose=True):
         print("validation loss: {:.5f} | errore medio: {:.2f} | varianza: {:.2f} | deviazione standard: {:.2f}".format(mean_loss, mean_err, var_err, math.sqrt(var_err)))
     if plot:
         fig, (ax1, ax2) = pyplot.subplots(nrows=2, ncols=1, sharex=True)
-        ax1.plot(test_result,color="#009E73")
-        ax1.plot(truth, color="k")
+        ax1.plot(truth, color="k", marker="o")
+        ax1.plot(test_result, color="#009E73", marker="v")
         ax1.legend(["target", "prediction"], loc='upper right')
         ax1.grid(True, which='both')
         ax1.axhline(y=0, color='k', alpha=0.6)
