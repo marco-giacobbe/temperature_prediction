@@ -38,7 +38,7 @@ def train1epoch(model, optim, criterion, dataset, bsz, out_w):
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         optim.step()
         optim.zero_grad()
-    return total_loss
+    return total_loss/dataset.shape[0]
 
 def eval(model, criterion, dataset, out_w, plot):
     model.eval()
@@ -54,9 +54,9 @@ def eval(model, criterion, dataset, out_w, plot):
             if not i%out_w:
                 test_result = torch.cat((test_result, out.view(-1).cpu()), 0)
                 truth = torch.cat((truth, tgt.view(-1).cpu()), 0)
-    i+=1
+
     err = abs(test_result-truth)
-    mean_loss = total_loss/i
+    mean_loss = total_loss/dataset.shape[0]
     mean_err = torch.mean(err).item()
     var_err = torch.var(err).item()
     print("validation loss: {:.5f} | errore medio: {:.2f} | varianza: {:.2f} | deviazione standard: {:.2f}".format(mean_loss, mean_err, var_err, math.sqrt(var_err)))
@@ -79,16 +79,18 @@ def eval(model, criterion, dataset, out_w, plot):
         pyplot.show()
         pyplot.close()
 
-    return total_loss
+    return mean_loss
 
 def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
     train_dataset, eval_dataset = datasets
+    train_losses, eval_losses = [], []
     loss_min = math.inf
     counter = 0
     epoch = 0
     while True:
         print("epoch: {} | ".format(epoch))
         current_loss = eval(model, criterion, eval_dataset, out_w, False)
+        eval_losses.append(current_loss)
         epoch += 1
         if current_loss < loss_min:
             counter = 0
@@ -99,6 +101,6 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience):
         if counter == patience:
             model = load_checkpoint(model, "./tmp/model_ckpnt.pth")
             current_loss = eval(model, criterion, eval_dataset, out_w, True)
-            break
-        train1epoch(model, optim, criterion, train_dataset, bsz, out_w)
+            return (train_losses[:-patience], eval_losses[1:-patience]) 
+        train_losses.append(train1epoch(model, optim, criterion, train_dataset, bsz, out_w))
         scheduler.step()
