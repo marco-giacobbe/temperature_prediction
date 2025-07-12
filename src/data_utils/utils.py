@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import torch
 
-
 def create_inout_seqs(input_data, in_w, out_w):
     inout_seq = []
     L = len(input_data)
@@ -10,7 +9,6 @@ def create_inout_seqs(input_data, in_w, out_w):
         train_seq = np.append(input_data[i:i+in_w], out_w * [0])
         train_label = input_data[i:i+in_w+out_w]
         inout_seq.append((train_seq ,train_label))
-
     return torch.FloatTensor(np.array(inout_seq))
 
 def get_data(datapath, device, in_w, out_w):
