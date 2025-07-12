@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 import src.data_utils as data_utils
 from matplotlib import pyplot
@@ -83,6 +84,28 @@ def eval(model, criterion, dataset, out_w, plot, verbose=True):
         pyplot.close()
 
     return mean_loss, (truth, test_result)
+
+def evaltf(interpreter, dataset, out_w):
+
+    def invoke_tflite_interpreter(interpreter, input):
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        interpreter.set_tensor(input_details[0]['index'], input)
+
+        interpreter.invoke()
+        # return output
+        return np.reshape(interpreter.get_tensor(output_details[0]['index']),-1)
+
+    test_result, truth = torch.Tensor(0), torch.Tensor(0)
+    with torch.no_grad():
+        for i in range(len(dataset) - 1):
+            src, tgt = data_utils.get_batch(dataset, i,1, out_w)
+            out = invoke_tflite_interpreter(interpreter, src.numpy())
+            out, tgt = out[-out_w:], tgt[-out_w:]
+            if not i%out_w:
+                test_result = torch.cat((test_result, out.view(-1).cpu()), 0)
+                truth = torch.cat((truth, tgt.view(-1).cpu()), 0)
+    return truth, test_result
 
 def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, verbose):
     train_dataset, eval_dataset = datasets
