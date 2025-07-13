@@ -88,11 +88,18 @@ def eval(model, criterion, dataset, out_w, plot, verbose=True):
 def invoke_tflite_interpreter(interpreter, input):
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
+    if input_details[0]['dtype'] == np.int8:
+        scale, zero_point = input_details[0]['quantization']
+        input = ((input / scale) + zero_point).astype(np.int8)
     interpreter.set_tensor(input_details[0]['index'], input)
 
     interpreter.invoke()
-    # return output
-    return np.reshape(interpreter.get_tensor(output_details[0]['index']),-1)
+    output = np.reshape(interpreter.get_tensor(output_details[0]['index']),-1)
+    if output_details[0]['dtype'] == np.int8:
+        out_scale, out_zero_point = output_details[0]['quantization']
+        output = (output.astype(np.float32) - out_zero_point) * out_scale
+
+    return output
 
 def evaltf(interpreter, dataset, out_w):
 
