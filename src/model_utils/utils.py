@@ -129,7 +129,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, ve
         current_loss = eval(model, criterion, eval_dataset, out_w, False, verbose=verbose)[0]
         eval_losses.append(current_loss)
         epoch += 1
-        if current_loss < loss_min:
+        if loss_min - current_loss >= 0.0002:
             counter = 0
             loss_min = current_loss
             save_checkpoint(model, optim, scheduler, epoch, "./tmp/model_ckpnt.pth")
