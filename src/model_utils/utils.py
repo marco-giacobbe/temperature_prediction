@@ -123,7 +123,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, mi
     epoch = 0
     while True:
         if verbose:
-            print("epoch: {} | patience_counter: {} | ".format(epoch, counter))
+            print("epoch: {} | patience_counter: {} | ".format(epoch, counter), end="")
         current_loss = eval(model, criterion, eval_dataset, out_w, False, verbose=verbose)[0]
         eval_losses.append(current_loss)
         epoch += 1
