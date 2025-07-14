@@ -117,7 +117,7 @@ def evaltf(interpreter, dataset, out_w):
     truth = np.concatenate(truth, axis=0)
     return truth, test_result
 
-def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, verbose):
+def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, min_epochs, verbose):
     train_dataset, eval_dataset = datasets
     train_losses, eval_losses = [], []
     loss_min = math.inf
@@ -129,13 +129,13 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, ve
         current_loss = eval(model, criterion, eval_dataset, out_w, False, verbose=verbose)[0]
         eval_losses.append(current_loss)
         epoch += 1
-        if loss_min - current_loss >= 0.0002:
+        if loss_min - current_loss >= 0.002:
             counter = 0
             loss_min = current_loss
             save_checkpoint(model, optim, scheduler, epoch, "./tmp/model_ckpnt.pth")
         else:
             counter += 1
-        if counter == patience:
+        if counter >= patience and epoch >= min_epochs:
             model = load_checkpoint(model, "./tmp/model_ckpnt.pth")
             current_loss = eval(model, criterion, eval_dataset, out_w, True, verbose)[0]
             return (train_losses[:-patience], eval_losses[1:-patience]) 
