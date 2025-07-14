@@ -60,10 +60,8 @@ def eval(model, criterion, dataset, out_w, plot, verbose=True):
     err = test_result-truth
     abserr = abs(err)
     mean_loss = total_loss/dataset.shape[0]
-    mean_err = torch.mean(abserr).item()
-    var_err = torch.var(abserr).item()
     if verbose:
-        print("validation loss: {:.5f} | errore medio: {:.2f} | varianza: {:.2f} | deviazione standard: {:.2f}".format(mean_loss, mean_err, var_err, math.sqrt(var_err)))
+        print("validation loss: {:.5f}".format(mean_loss))
     if plot:
         fig, (ax1, ax2) = pyplot.subplots(nrows=2, ncols=1, sharex=True)
         ax1.plot(truth, color="k", marker="o")
@@ -125,7 +123,7 @@ def train(model, optim, criterion, scheduler, datasets, bsz, out_w, patience, mi
     epoch = 0
     while True:
         if verbose:
-            print("epoch: {} | ".format(epoch))
+            print("epoch: {} | patience_counter: {} | ".format(epoch, counter))
         current_loss = eval(model, criterion, eval_dataset, out_w, False, verbose=verbose)[0]
         eval_losses.append(current_loss)
         epoch += 1
