@@ -90,7 +90,7 @@ class KANLinear(torch.nn.Module):
         grid: torch.Tensor = (
             self.grid
         )  # (in_features, grid_size + 2 * spline_order + 1)
-        x = x.unsqueeze(-1)
+        x = x.view(x.shape[0], self.in_features, 1)
         bases = ((x >= grid[:, :-1]) & (x < grid[:, 1:])).to(x.dtype)
         for k in range(1, self.spline_order + 1):
             bases = (
