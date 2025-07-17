@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import math
 
-from src.layers import KANLinear
+from src.models import KAN
 
 
 class PositionalEncoding(nn.Module):
@@ -28,7 +28,7 @@ class MultiHeadAttention(nn.Module):
         self.nhead = nhead
 
         def create_layer(kan, d_model):
-            return KANLinear(d_model, d_model) if kan else nn.Linear(d_model, d_model)
+            return KAN([d_model, d_model]) if kan else nn.Linear(d_model, d_model)
 
         self.w_q = create_layer(kan, d_model)
         self.w_k = create_layer(kan, d_model)
@@ -69,7 +69,7 @@ class FeedForward(nn.Module):
         super(FeedForward, self).__init__()
 
         def create_layer(kan, in_sz, out_sz):
-            return KANLinear(in_sz, out_sz) if kan else nn.Linear(in_sz, out_sz)
+            return KAN([in_sz, out_sz]) if kan else nn.Linear(in_sz, out_sz)
         
         self.linear1 = create_layer(kan, d_model, ff)
         self.linear2 = create_layer(kan, ff, d_model)
@@ -102,7 +102,7 @@ class Transformer(nn.Module):
         self.out_w = out_w
         self.pos_encoder = PositionalEncoding(d_model, max_len=300)
         self.encoder = nn.ModuleList([EncoderLayer(d_model, nhead, ff, dropout, kan) for _ in range(nlayer)])
-        self.decoder = KANLinear(d_model, 1) if kan else nn.Linear(d_model, 1)
+        self.decoder = KAN([d_model, 1]) if kan else nn.Linear(d_model, 1)
 
 
     def generate_mask(self, sz):
