@@ -96,7 +96,7 @@ class Transformer(nn.Module):
         self.in_w = in_w
         self.out_w = out_w
         self.pos_encoder = PositionalEncoding(d_model, max_len=300)
-        self.encoder = nn.ModuleList([EncoderLayer(d_model, nhead, ff, dropout, kan) for _ in range(nlayer)])
+        self.encoder = nn.ModuleList([EncoderLayer(d_model, nhead, ff, dropout) for _ in range(nlayer)])
         self.decoder = KANLinear(d_model, 1) if kan else nn.Linear(d_model, 1)
 
 
