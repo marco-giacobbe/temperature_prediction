@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import math
 
-from src.models import KAN
+from src.layers import KANLinear
 
 
 class PositionalEncoding(nn.Module):
@@ -20,20 +20,18 @@ class PositionalEncoding(nn.Module):
         return x + self.pe[:x.size(0), :]
     
 class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model, nhead, dropout, kan):
+    def __init__(self, d_model, nhead, dropout):
         super(MultiHeadAttention, self).__init__()
         assert d_model % nhead == 0, "nhead must be multiple of d_model"
         self.d_k = d_model // nhead
         self.d_model = d_model
         self.nhead = nhead
 
-        def create_layer(kan, d_model):
-            return KAN([d_model, d_model]) if kan else nn.Linear(d_model, d_model)
-
-        self.w_q = create_layer(kan, d_model)
-        self.w_k = create_layer(kan, d_model)
-        self.w_v = create_layer(kan, d_model)
-        self.w_o = create_layer(kan, d_model)
+        self.w_q = nn.Linear(d_model, d_model)
+        self.w_k = nn.Linear(d_model, d_model)
+        self.w_v = nn.Linear(d_model, d_model)
+        self.w_o = nn.Linear(d_model, d_model)
+        
         self.drop = nn.Dropout(dropout)
 
     def split_heads(self, x):
@@ -65,14 +63,11 @@ class MultiHeadAttention(nn.Module):
         return self.w_o(attention_output).view(seq_len, batch_size, self.d_model)
     
 class FeedForward(nn.Module):
-    def __init__(self, d_model, ff, dropout, kan):
+    def __init__(self, d_model, ff, dropout):
         super(FeedForward, self).__init__()
-
-        def create_layer(kan, in_sz, out_sz):
-            return KAN([in_sz, out_sz]) if kan else nn.Linear(in_sz, out_sz)
         
-        self.linear1 = create_layer(kan, d_model, ff)
-        self.linear2 = create_layer(kan, ff, d_model)
+        self.linear1 = nn.Linear(d_model, ff)
+        self.linear2 = nn.Linear(ff, d_model)
         self.relu = nn.ReLU()
         self.drop = nn.Dropout(dropout)
 
@@ -80,10 +75,10 @@ class FeedForward(nn.Module):
         return self.linear2(self.drop(self.relu(self.linear1(x))))
     
 class EncoderLayer(nn.Module):
-    def __init__(self, d_model, nhead, ff, dropout, kan):
+    def __init__(self, d_model, nhead, ff, dropout):
         super(EncoderLayer, self).__init__()
-        self.mha_block = MultiHeadAttention(d_model, nhead, dropout, kan=kan)
-        self.ff_block = FeedForward(d_model, ff, dropout, kan=kan)
+        self.mha_block = MultiHeadAttention(d_model, nhead, dropout)
+        self.ff_block = FeedForward(d_model, ff, dropout)
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
         self.drop = nn.Dropout(dropout)
@@ -102,7 +97,7 @@ class Transformer(nn.Module):
         self.out_w = out_w
         self.pos_encoder = PositionalEncoding(d_model, max_len=300)
         self.encoder = nn.ModuleList([EncoderLayer(d_model, nhead, ff, dropout, kan) for _ in range(nlayer)])
-        self.decoder = KAN([d_model, 1]) if kan else nn.Linear(d_model, 1)
+        self.decoder = KANLinear(d_model, 1) if kan else nn.Linear(d_model, 1)
 
 
     def generate_mask(self, sz):
