@@ -12,11 +12,16 @@ def create_inout_seqs(input_data, in_w, out_w):
     return torch.FloatTensor(np.array(inout_seq))
 
 def get_data(datapath, device, in_w, out_w):
-    train_data = pd.read_csv(datapath.format("train"), header=0, index_col=0, skiprows=4)["temp"].to_numpy()
-    test_data = pd.read_csv(datapath.format("eval"), header=0, index_col=0, skiprows=4)["temp"].to_numpy()
-    train_sequence = create_inout_seqs(train_data, in_w, out_w).to(device)
-    test_sequence = create_inout_seqs(test_data, in_w, out_w).to(device)
-    return train_sequence, test_sequence
+    if "{}" in datapath: 
+        train_data = pd.read_csv(datapath.format("train"), header=0, index_col=0, skiprows=4)["temp"].to_numpy()
+        test_data = pd.read_csv(datapath.format("eval"), header=0, index_col=0, skiprows=4)["temp"].to_numpy()
+        train_sequence = create_inout_seqs(train_data, in_w, out_w).to(device)
+        test_sequence = create_inout_seqs(test_data, in_w, out_w).to(device)
+        return train_sequence, test_sequence
+    else:
+        data = pd.read_csv(datapath, header=0, index_col=0, skiprows=4)["temp"].to_numpy()
+        data_sequence = create_inout_seqs(data, in_w, out_w).to(device)
+        return data_sequence
 
 def get_batch(source, i, bsz, out_w):
     seq_len = min(bsz, len(source) - 1 - i)
